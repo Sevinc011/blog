@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.db.models import Q 
-from .models import Category, Post, Author, Comment
+from .models import Category, Post, Author, Comment,Like, Favorite
+from django.shortcuts import redirect
 
 def get_author(user):
     qs = Author.objects.filter(user=user)
@@ -24,19 +25,50 @@ def post(request, slug):
     latest = Post.objects.order_by('-timestamp')[:3]
     comments = post.comments.filter(active=True)
     if request.method == "POST":
-        content = request.POST.get('content')
-        if content:
-            Comment.objects.create(
-                post=post,
-                user=request.user,
-                content=content
-            )
+       if request.user.is_authenticated:
+            content= request.POST.get('content')
+            if content:
+                Comment.objects.create(
+                    post=post,
+                    user=request.user,
+                    content=content
+                )
     context = {
         'post': post,
         'latest': latest,
         'comments': comments,
     }
     return render(request, 'post.html', context)
+
+def like_post(request, slug):
+    post = Post.objects.get(slug=slug)
+
+    if request.user.is_authenticated:
+        like, created = Like.objects.get_or_create(
+            post=post,
+            user=request.user
+        )
+
+        if not created:
+            like.delete()
+
+    return redirect('post', slug=slug)
+
+
+def favorite_post(request, slug):
+    post = Post.objects.get(slug=slug)
+
+    if request.user.is_authenticated:
+        fav, created = Favorite.objects.get_or_create(
+            post=post,
+            user=request.user
+        )
+
+        if not created:
+            fav.delete()
+
+    return redirect('post', slug=slug)
+
 
 def about (request):
     return render(request, 'about_page.html')
@@ -47,7 +79,8 @@ def search(request):
     if query:
         queryset = queryset.filter(
             Q(title__icontains=query) |
-            Q(overview__icontains=query)
+            Q(overview__icontains=query) |
+            Q(content__icontains=query)
         ).distinct()
     context = {
         'object_list': queryset

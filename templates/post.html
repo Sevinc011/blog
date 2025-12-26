@@ -104,6 +104,31 @@
          <p>Comment əlavə etmək üçün daxil olun.</p>
          {% endif %}
 
+<div class="flex gap-4 mt-4">
+
+{% if user.is_authenticated %}
+    <form method="POST" action="{% url 'like-post' post.slug %}">
+        {% csrf_token %}
+        <button type="submit">
+            ❤️ Like ({{ post.likes.count }})
+        </button>
+    </form>
+
+    <form method="POST" action="{% url 'favorite-post' post.slug %}">
+        {% csrf_token %}
+        <button type="submit">
+            ⭐ Favorite ({{ post.favorites.count }})
+        </button>
+    </form>
+{% else %}
+    <p>Like və Favorite üçün login olun</p>
+{% endif %}
+
+</div>
+
+	</div>
+	<!--/container-->
+
 		<!--Author-->
 		<div class="flex w-full items-center font-sans px-4 py-12">
 			<img class="w-10 h-10 rounded-full mr-4" src="{{ post.author.profile_picture.url }}">
@@ -158,7 +183,7 @@
 				navcontent.classList.remove("bg-white");
 				navcontent.classList.add("bg-gray-100");
 
-			}
+			}s
 
 		});
 
